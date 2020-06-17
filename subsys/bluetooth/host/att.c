@@ -448,7 +448,7 @@ static void bt_att_chan_send_rsp(struct bt_att_chan *chan, struct net_buf *buf,
 	err = bt_att_chan_send(chan, buf, cb);
 	if (err) {
 		/* Responses need to be sent back using the same channel */
-		k_fifo_put(&chan->tx_queue, buf);
+		net_buf_put(&chan->tx_queue, buf);
 	}
 }
 
@@ -2503,12 +2503,12 @@ static void att_reset(struct bt_att *att)
 
 #if CONFIG_BT_ATT_PREPARE_COUNT > 0
 	/* Discard queued buffers */
-	while ((buf = k_fifo_get(&att->prep_queue, K_NO_WAIT))) {
+	while ((buf = net_buf_get(&att->prep_queue, K_NO_WAIT))) {
 		net_buf_unref(buf);
 	}
 #endif /* CONFIG_BT_ATT_PREPARE_COUNT > 0 */
 
-	while ((buf = k_fifo_get(&att->tx_queue, K_NO_WAIT))) {
+	while ((buf = net_buf_get(&att->tx_queue, K_NO_WAIT))) {
 		net_buf_unref(buf);
 	}
 
@@ -2542,7 +2542,7 @@ static void att_chan_detach(struct bt_att_chan *chan)
 	}
 
 	/* Release pending buffers */
-	while ((buf = k_fifo_get(&chan->tx_queue, K_NO_WAIT))) {
+	while ((buf = net_buf_get(&chan->tx_queue, K_NO_WAIT))) {
 		net_buf_unref(buf);
 	}
 
@@ -2973,7 +2973,7 @@ int bt_att_send(struct bt_conn *conn, struct net_buf *buf, bt_conn_tx_cb_t cb,
 	if (ret < 0) {
 		/* Queue buffer to be send later */
 		BT_DBG("Queueing buffer %p", buf);
-		k_fifo_put(&att->tx_queue, buf);
+		net_buf_put(&att->tx_queue, buf);
 	}
 
 	return 0;
